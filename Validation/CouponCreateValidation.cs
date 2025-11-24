@@ -22,6 +22,8 @@ namespace MinimalAPI.Validation
         {
             RuleFor(c => c.Id)
                 .GreaterThan(0).WithMessage("Id must be greater than 0.");
+
+
         }
     }
 }

@@ -10,20 +10,7 @@ namespace MinimalAPI
         public MappingConfig()
         {
             CreateMap<CouponDto, Coupon>()
-                .ForAllMembers(opts =>
-                {
-                    opts.Condition((src, dest, srcMember) =>
-                    {
-                        if (srcMember == null) return false;
-                        var memberType = srcMember.GetType();
-                        if (memberType == typeof(int) && (int)srcMember == default(int))
-                            return false;
-                        if (memberType == typeof(bool) && (bool)srcMember == default(bool))
-                            return false;
-                        // int? ve bool? nullable olduğundan default kontrolü gerekmez
-                        return true;
-                    });
-                });
+                            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Coupon, CouponDtoWithoutId>().ReverseMap();
         }
     }
