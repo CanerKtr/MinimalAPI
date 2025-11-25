@@ -27,15 +27,33 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("api/coupon", async (AppDbContext db) =>
+app.MapGet("api/coupon", async (HttpRequest req,AppDbContext db) =>
 {
-    logger.LogInformation("Getting all coupons");
-    var coupons = await db.Coupons.ToListAsync();
-    return Results.Ok(ApiResponse<List<Coupon>>.Ok(coupons));
-}).WithName("GetAllCoupons")
+    logger.LogInformation("Getting coupons with filter");
+    var query = db.Coupons.AsQueryable();
+
+    // Tüm query string parametreleri oku
+    foreach (var (key, value) in req.Query)
+    {
+        if (key.Equals("id", StringComparison.OrdinalIgnoreCase) && int.TryParse(value, out int id))
+            query = query.Where(c => c.Id == id);
+
+        if (key.Equals("name", StringComparison.OrdinalIgnoreCase))
+            query = query.Where(c => c.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+
+        if (key.Equals("percent", StringComparison.OrdinalIgnoreCase) && int.TryParse(value, out int percent))
+            query = query.Where(c => c.Percent == percent);
+
+        if (key.Equals("isActive", StringComparison.OrdinalIgnoreCase) && bool.TryParse(value, out bool isActive))
+            query = query.Where(c => c.IsActive == isActive);
+    }
+
+    var result = await query.ToListAsync();
+    return Results.Ok(ApiResponse<List<Coupon>>.Ok(result));
+}).WithName("GetCouponsWithFilter")
 .WithTags("Coupon")
-.WithSummary("Gets all coupons")
-.WithDescription("Returns a list of all coupons in the system")
+.WithSummary("Get coupons with optional filters")
+.WithDescription("Filter coupons by Id, Name, Percent or IsActive using query parameters")
 .Produces<ApiResponse<List<Coupon>>>(StatusCodes.Status200OK);
 
 
